@@ -35,6 +35,16 @@ int main()
   PID pid;
   // TODO: Initialize the pid variable.
 
+  // The weights were tuned as follows
+  // Kp controls how quickly the car can change directions.  However, too high of a value leads to
+  // rapid over correction, which manifests itself in the car moving rapidly left and right in
+  // certain situations
+  // Ki controls the integrated error and needs to be small since this error accumulates quickly
+  // Kd acts as stabilizer and dampens jerky motion.  Too high a value, though, the car can't
+  // change directions quickly enough for sharper turns.  Too low a value, the turns are less
+  // stable and smooth
+  pid.Init(0.1, 0.0004, 2.0);
+
   h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -57,7 +67,10 @@ int main()
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
-          
+
+          pid.UpdateError(cte);
+          steer_value = pid.TotalError();
+
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
 
